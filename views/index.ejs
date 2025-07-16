@@ -1,0 +1,600 @@
+
+
+<!-- index.ejs -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GeminiLens: A smart, searchable AI document assistant.</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <div class="layout">
+  <aside class="sidebar">
+    <h2>🧠 Past Chats</h2>
+    <ul id="sessionList"></ul>
+  </aside>
+
+
+
+
+  <div class="container">
+    <h1>GeminiLens 🔍</h1>
+
+    <!-- <div class="search-bar">
+      <input type="text" placeholder="Search or Ask GeminiLens..." />
+    </div> -->
+
+    <!-- <form action="/extracttextfromimage" method="post" enctype="multipart/form-data">
+      <label for="file" class="custom-file-label">📁 Choose Image File</label>
+      <input type="file" name="file" accept="image/*" required id="file" style="display: none;" />
+      <button type="submit">Extract Text From Image</button>
+    </form>
+
+    <textarea cols="50" rows="15" readonly><%= data %></textarea>  -->
+  <form id="extractForm" enctype="multipart/form-data">
+  <label for="file" class="custom-file-label">📁 Choose Image File</label>
+  <input type="file" name="file" accept="image/*" required id="file" style="display: none;" />
+  <button type="submit">Extract Text From Image</button>
+ </form>
+
+ <textarea id="ocrOutput" cols="50" rows="15" readonly><%= data %></textarea>
+
+    <div class="chatbox">
+      <div style="display: flex; gap: 0.5rem;">
+        <input type="text" id="chatInput" placeholder="Ask Gemini about the text...">
+        <button onclick="sendMessage()">Ask</button>
+        <button class="clear-btn" onclick="clearChat()">Clear</button>
+      </div>
+      <div class="chat-actions"  style="display: flex; gap: 0.5rem; align-items: center;">
+        
+      </div>
+      <div id="chatOutput" class="chat-history"></div>
+    </div>
+  </div>
+ <div class="right-column">
+  <div class="sticky-notes-panel">
+    <h3>📌 Sticky Notes</h3>
+    <form id="noteForm">
+      <input type="text" id="noteTitle" placeholder="Title" required />
+      <textarea id="noteContent" rows="3" placeholder="Write a note..."></textarea>
+      <button type="submit">Add Note</button>
+    </form>
+    <div id="notesContainer"></div>
+  </div>
+
+  <div class="summarize-section">
+    <h3>📝 Summarize Chat</h3>
+    <button  id="generateSummaryBtn" onclick="summarizeChat()">Generate Summary</button>
+    <textarea id="summaryBox" readonly placeholder="Your summary will appear here..."></textarea>
+  </div>
+</div>
+
+
+<!-- <script>
+  let sessionId = Date.now().toString();
+  let isNewSession = true;
+
+  function appendMessage(sender, message) {
+    const output = document.getElementById('chatOutput');
+    const p = document.createElement('p');
+    p.innerHTML = `<strong>${sender}:</strong> ${message}`;
+    output.appendChild(p);
+    output.scrollTop = output.scrollHeight;
+  }
+// async function loadSessions() {
+//   const res = await fetch('/sessions');
+//   const sessions = await res.json();
+//   const list = document.getElementById('sessionList');
+//   list.innerHTML = '';
+
+//   sessions.forEach(session => {
+//     const li = document.createElement('li');
+//     // li.textContent = session.title || new Date(session.createdAt).toLocaleString();
+//     li.textContent = session.title || new Date(session.createdAt).toLocaleString();
+
+//     li.dataset.sessionId = session.sessionId;
+
+//     // Check if this session is currently active
+//     if (session.sessionId === sessionId) {
+//       li.classList.add('active');
+//     }
+
+//     li.onclick = () => {
+//       document.querySelectorAll('#sessionList li').forEach(el => el.classList.remove('active'));
+//       li.classList.add('active');
+//       loadSession(session.sessionId);
+//     };
+//     list.appendChild(li);
+//   });
+// }
+
+  async function loadSessions() {
+  const res = await fetch('/sessions');
+  const sessions = await res.json();
+  const list = document.getElementById('sessionList');
+  list.innerHTML = '';
+
+  // Add "New Chat" at the top
+  const newChatLi = document.createElement('li');
+  newChatLi.textContent = '🆕 New Chat';
+  newChatLi.classList.add('new-chat');
+  newChatLi.onclick = () => {
+    sessionId = Date.now().toString();
+    isNewSession = true;
+    document.getElementById('chatOutput').innerHTML = '';
+    document.getElementById('summaryBox').value = '';
+    document.getElementById('chatInput').value = '';
+  };
+  list.appendChild(newChatLi);
+
+  // Now load existing sessions below it
+  sessions.forEach(session => {
+    const li = document.createElement('li');
+    li.textContent = session.title || new Date(session.createdAt).toLocaleString();
+    // li.onclick = () => loadSession(session.sessionId);
+
+    // // highlight active
+    // if (session.sessionId === sessionId) {
+    //   li.classList.add('active');
+    // }
+
+    li.dataset.sessionId = session.sessionId;
+li.onclick = () => {
+  loadSession(session.sessionId);
+
+  // Move active class logic here
+  document.querySelectorAll('#sessionList li').forEach(el => el.classList.remove('active'));
+  li.classList.add('active');
+};
+
+    list.appendChild(li);
+  });
+}
+
+
+
+  async function loadSession(id) {
+    sessionId = id;
+    isNewSession = false;
+
+    // 1. Load chat
+    document.getElementById('chatOutput').innerHTML = '';
+    const res = await fetch(`/history/${sessionId}`);
+    const data = await res.json();
+    data.history.forEach(msg => {
+      const sender = msg.sender === 'user' ? 'You' : 'Gemini';
+      appendMessage(sender, msg.text);
+    });
+
+
+    // 2. Load summary
+    const summaryRes = await fetch('/notes/summarize', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionId })
+    });
+    const summaryData = await summaryRes.json();
+    document.getElementById('summaryBox').value = summaryData.content || summaryData.summary;
+
+    // 3. Refresh notes
+    loadNotes();
+  }
+
+  //sumaary and notes
+    if (data.summary) {
+    document.getElementById('summaryBox').value = data.summary;
+  }
+   loadNotes(sessionId);
+
+  // 3. Load OCR
+  if (data.ocrText) {
+    document.getElementById('ocrOutput').value = data.ocrText;
+  }
+
+  async function sendMessage() {
+    const input = document.getElementById('chatInput');
+    const message = input.value.trim();
+    if (!message) return;
+
+    appendMessage("You", message);
+
+    const res = await fetch('/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message,
+        context: document.getElementById('ocrOutput').value,
+        sessionId
+      })
+    });
+
+    const data = await res.json();
+    appendMessage("Gemini", data.reply);
+    input.value = '';
+
+    if (isNewSession) {
+      isNewSession = false;
+      loadSessions();
+    }
+  }
+
+  function clearChat() {
+    document.getElementById('chatOutput').innerHTML = '';
+  }
+
+  async function loadNotes() {
+    const res = await fetch('/notes');
+    const notes = await res.json();
+    const container = document.getElementById('notesContainer');
+    container.innerHTML = '';
+
+    notes.forEach(note => {
+      const div = document.createElement('div');
+      div.className = 'note-card';
+      div.innerHTML = `
+        <h4>${note.title}</h4>
+        <p>${note.content}</p>
+        <button onclick="deleteNote('${note._id}')">✖</button>
+      `;
+      container.appendChild(div);
+    });
+  }
+
+async function summarizeChat() {
+  const res = await fetch('/summarize', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ sessionId })
+  });
+
+  if (!res.ok) {
+    alert("❌ Failed to summarize chat.");
+    return;
+  }
+
+  const data = await res.json();
+  const summary = data.summary;
+  document.getElementById('summaryBox').value = summary;
+
+  // Auto-save summary as note
+  await fetch('/notes', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      title: "Summary - " ,
+      content: summary
+    })
+  });
+
+  loadNotes(); // Refresh notes section
+}
+
+
+  document.getElementById('noteForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const title = document.getElementById('noteTitle').value.trim();
+    const content = document.getElementById('noteContent').value.trim();
+    if (!title || !content) return alert("Both fields are required.");
+
+    const res = await fetch('/notes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionId, title, content })
+    });
+
+    if (res.ok) {
+      document.getElementById('noteTitle').value = '';
+      document.getElementById('noteContent').value = '';
+      loadNotes();
+    } else {
+      alert("Failed to add note.");
+    }
+  });
+
+  async function deleteNote(id) {
+    const res = await fetch(`/notes/${id}`, { method: 'DELETE' });
+    if (res.ok) loadNotes();
+  }
+
+  // document.getElementById('extractForm').addEventListener('submit', async function (e) {
+  //   e.preventDefault();
+
+  //   const fileInput = document.getElementById('file');
+  //   const file = fileInput.files[0];
+  //   if (!file) return alert("Please select an image file.");
+
+  //   const formData = new FormData();
+  //   formData.append('file', file);
+  //   formData.append('sessionId', sessionId);
+
+  //   try {
+  //     const res = await fetch('/extracttextfromimage', {
+  //       method: 'POST',
+  //       body: formData
+  //     });
+
+  //     const html = await res.text();
+  //     const parser = new DOMParser();
+  //     const doc = parser.parseFromString(html, 'text/html');
+  //     const extractedText = doc.querySelector('textarea')?.textContent || "⚠️ Failed to extract text";
+
+  //     document.getElementById('ocrOutput').value = extractedText;
+  //   } catch (err) {
+  //     console.error("Error during extraction:", err);
+  //     alert("❌ Failed to extract text.");
+  //   }
+  // });
+
+  document.getElementById('extractForm').addEventListener('submit', async function (e) {
+  e.preventDefault();
+
+  const fileInput = document.getElementById('file');
+  const file = fileInput.files[0];
+  if (!file) return alert("Please select an image file.");
+
+  const formData = new FormData();
+  formData.append('file', file);
+
+  try {
+    const res = await fetch(`/extracttextfromimage?sessionId=${sessionId}`, {
+      method: 'POST',
+      body: formData
+    });
+
+    const html = await res.text();
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+    const extractedText = doc.querySelector('textarea')?.textContent || "⚠️ Failed to extract text";
+
+    document.getElementById('ocrOutput').value = extractedText; // ✅ FIXED
+
+  } catch (err) {
+    console.error("Error during extraction:", err);
+    alert("❌ Failed to extract text.");
+  }
+});
+
+
+  window.onload = () => {
+    loadSessions();
+    loadNotes();
+  };
+</script>
+
+
+</body>
+</html>
+ -->
+
+
+ <script>
+  let sessionId = Date.now().toString();
+  let isNewSession = true;
+
+  function appendMessage(sender, message) {
+    const output = document.getElementById('chatOutput');
+    const p = document.createElement('p');
+    p.innerHTML = `<strong>${sender}:</strong> ${message}`;
+    output.appendChild(p);
+    output.scrollTop = output.scrollHeight;
+  }
+
+  async function loadSessions() {
+    const res = await fetch('/sessions');
+    const sessions = await res.json();
+    const list = document.getElementById('sessionList');
+    list.innerHTML = '';
+
+    // Add "New Chat" at the top
+    const newChatLi = document.createElement('li');
+    newChatLi.textContent = '🆕 New Chat';
+    newChatLi.classList.add('new-chat');
+    newChatLi.onclick = () => {
+      sessionId = Date.now().toString();
+      isNewSession = true;
+      document.getElementById('chatOutput').innerHTML = '';
+      document.getElementById('summaryBox').value = '';
+      document.getElementById('chatInput').value = '';
+      document.getElementById('ocrOutput').value = '';
+      loadNotes(); // load fresh notes for new session
+      loadSessions(); // refresh sidebar to un-highlight any session
+    };
+    list.appendChild(newChatLi);
+
+    sessions.forEach(session => {
+      const li = document.createElement('li');
+      li.textContent = session.title || new Date(session.createdAt).toLocaleString();
+      li.dataset.sessionId = session.sessionId;
+
+      if (session.sessionId === sessionId) {
+        li.classList.add('active');
+      }
+
+      li.onclick = () => {
+        document.querySelectorAll('#sessionList li').forEach(el => el.classList.remove('active'));
+        li.classList.add('active');
+        loadSession(session.sessionId);
+      };
+
+      list.appendChild(li);
+    });
+  }
+
+  async function loadSession(id) {
+    sessionId = id;
+    isNewSession = false;
+
+    // 1. Load chat
+    document.getElementById('chatOutput').innerHTML = '';
+    const res = await fetch(`/history/${sessionId}`);
+    const data = await res.json();
+    document.getElementById('ocrOutput').value = data.ocrText || '';
+    if (data.history) {
+      data.history.forEach(msg => {
+        const sender = msg.sender === 'user' ? 'You' : 'Gemini';
+        appendMessage(sender, msg.text);
+      });
+    }
+
+    const chatRes = await fetch(`/history/${sessionId}`);
+const data1 = await chatRes.json();
+
+ document.getElementById('summaryBox').value = data.summary || '';
+
+
+    // 2. Load OCR text & summary from Chat model
+    if (data.ocrText) {
+      document.getElementById('ocrOutput').value = data.ocrText;
+    }
+
+
+
+
+if (data.summary) {
+  document.getElementById('summaryBox').value = data.summary;
+}
+
+    // 3. Load session-based notes
+    loadNotes();
+  }
+
+  async function sendMessage() {
+    const input = document.getElementById('chatInput');
+    const message = input.value.trim();
+    if (!message) return;
+
+    appendMessage("You", message);
+
+    const res = await fetch('/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message,
+        context: document.getElementById('ocrOutput').value,
+        sessionId
+      })
+    });
+
+    const data = await res.json();
+    appendMessage("Gemini", data.reply);
+    input.value = '';
+
+    if (isNewSession) {
+      isNewSession = false;
+      loadSessions();
+    }
+  }
+
+  function clearChat() {
+    document.getElementById('chatOutput').innerHTML = '';
+  }
+
+  async function loadNotes() {
+    const res = await fetch(`/notes?sessionId=${sessionId}`);
+    const notes = await res.json();
+    const container = document.getElementById('notesContainer');
+    container.innerHTML = '';
+
+    notes.forEach(note => {
+      const div = document.createElement('div');
+      div.className = 'note-card';
+      div.innerHTML = `
+        <h4>${note.title}</h4>
+        <p>${note.content}</p>
+        <button onclick="deleteNote('${note._id}')">✖</button>
+      `;
+      container.appendChild(div);
+    });
+  }
+
+  async function summarizeChat() {
+    const res = await fetch('/summarize', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionId })
+    });
+
+    if (!res.ok) {
+      alert("❌ Failed to summarize chat.");
+      return;
+    }
+
+    const data = await res.json();
+    const summary = data.summary //"⚠️ No summary generated.";
+    document.getElementById('summaryBox').value = summary;
+
+    // Auto-save summary as note
+    await fetch('/notes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sessionId,
+        title: "Summary",
+        content: summary
+      })
+    });
+
+    loadNotes(); // Refresh notes
+  }
+
+  document.getElementById('noteForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const title = document.getElementById('noteTitle').value.trim();
+    const content = document.getElementById('noteContent').value.trim();
+    if (!title || !content) return alert("Both fields are required.");
+
+    const res = await fetch('/notes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionId, title, content })
+    });
+
+    if (res.ok) {
+      document.getElementById('noteTitle').value = '';
+      document.getElementById('noteContent').value = '';
+      loadNotes();
+    } else {
+      alert("Failed to add note.");
+    }
+  });
+
+  async function deleteNote(id) {
+    const res = await fetch(`/notes/${id}`, { method: 'DELETE' });
+    if (res.ok) loadNotes();
+  }
+
+  document.getElementById('extractForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+
+    const fileInput = document.getElementById('file');
+    const file = fileInput.files[0];
+    if (!file) return alert("Please select an image file.");
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const res = await fetch(`/extracttextfromimage?sessionId=${sessionId}`, {
+        method: 'POST',
+        body: formData
+      });
+
+      const html = await res.text();
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, 'text/html');
+      const extractedText = doc.querySelector('textarea')?.textContent || "⚠️ Failed to extract text";
+
+      document.getElementById('ocrOutput').value = extractedText;
+    } catch (err) {
+      console.error("Error during extraction:", err);
+      alert("❌ Failed to extract text.");
+    }
+  });
+
+  window.onload = () => {
+    loadSessions();
+    loadNotes();
+  };
+</script>

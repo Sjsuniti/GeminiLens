@@ -1,0 +1,39 @@
+🧠 GeminiLens: A smart, searchable AI document assistant.
+Users upload a document, extract the text, ask intelligent questions, and get saved responses for later.
+
+ What We'll Add to GeminiLens
+Feature	Implementation
+📝 Manual notes & summaries	Use your existing Notes backend
+📌 Sticky note UI on the right	Styled cards on right panel
+⏳ Show title + timestamp	Title from user or default, timestamp from DB
+🗑️ Delete or edit notes easily	Add buttons on each sticky card
+📄 Optional: auto-summary note	Integrate Gemini-powered auto-note
+
+
+To support full session state restoration in your GeminiLens project (chat, notes, OCR text, and summary), you'll need to:
+
+Update your MongoDB schema to store:
+
+ocrText
+
+summary
+
+Linked notes (or embed them directly)
+
+Update the /chat route to:
+
+Save ocrText and summary per session.
+
+Enhance the /history/:sessionId route to return:
+
+Full session data: messages, OCR, summary, notes.
+
+Update frontend (loadSession) to:
+
+Load and populate:
+
+OCR textarea (ocrOutput)
+
+Summary box
+
+Notes container
