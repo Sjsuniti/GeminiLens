@@ -85,7 +85,8 @@ router.get('/sessions', async (req, res) => {
       .limit(10);
     res.json(sessions);
   } catch (err) {
-    res.status(500).json({ error: "Failed to fetch sessions" });
+    console.error("Session fetch error:", err.message)
+    res.status(500).json([]);
   }
 });   
 router.post('/summarize', async (req, res) => {
