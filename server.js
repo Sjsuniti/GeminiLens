@@ -53,35 +53,7 @@ app.get('/', (req, res) => {
   res.render('index', {data:''});
 });
 
-// app.post('/extracttextfromimage', upload.single('file'), async (req, res) => {
-//   try {
-//     const imageUrl = req.file.path || req.file.url;
-//     console.log("Uploaded to Cloudinary:", imageUrl);
 
-//     process.env.PATH += ";C:\\Program Files\\Tesseract-OCR";
-
-//     const config = {
-//       lang: "eng",
-//       oem: 1,
-//       psm: 3,
-//     };
-
-//     tesseract
-//       .recognize(req.file.buffer, config)
-//       .then((text) => {
-//         console.log("OCR Result:", text);
-//         res.render( { data: text, imageUrl: imageUrl });
-//       })
-//       .catch((error) => {
-//         console.log("OCR Error:", error.message);
-//         res.render( { data: 'OCR error: ' + error.message, imageUrl: imageUrl });
-//       });
-
-//   } catch (error) {
-//     console.error("Upload Error:", error.message);
-//     res.render( { data: 'Upload failed: ' + error.message, imageUrl: null });
-//   }
-// });
 
 const streamifier = require('streamifier');
 const Chat= require('./models/chat');

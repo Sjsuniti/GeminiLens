@@ -11,7 +11,9 @@ router.get("/", async (req, res) => {
   if (!sessionId) {
     return res.status(400).json({ error: "Missing sessionId" });
   }
-    const notes = await Note.find().sort({ createdAt: -1 });
+    // const notes = await Note.find().sort({ createdAt: -1 });
+    const notes = await Note.find({ sessionId }).sort({ createdAt: -1 });
+
     res.status(200).json(notes);
   } catch (error) {
     res.status(500).json({ message: error.message });
