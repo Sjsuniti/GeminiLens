@@ -37,3 +37,10 @@ OCR textarea (ocrOutput)
 Summary box
 
 Notes container
+
+
+// what next??
+    atfirst fix summarization and notes issue
+
+
+ SaaS Version of GeminiLens: "GeminiLens AI Suite"   

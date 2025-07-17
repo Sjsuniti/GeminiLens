@@ -67,7 +67,7 @@ app.post('/extracttextfromimage', upload.single('file'), async (req, res) => {
       return res.status(400).send("❌ sessionId is missing");
     }
 
-    process.env.PATH += ";C:\\Program Files\\Tesseract-OCR";
+    process.env.PATH += ":/usr/bin";
 
     const config = {
       lang: "eng",
