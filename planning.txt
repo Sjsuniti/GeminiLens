@@ -44,3 +44,29 @@ Notes container
 
 
  SaaS Version of GeminiLens: "GeminiLens AI Suite"   
+
+
+ 3. Unique Differentiators to Stand Out
+Multi‑Modal Ingestion
+
+Beyond images/PDFs: allow audio (podcasts, recorded meetings) → transcript → contextual Q&A.
+
+Collaborative Annotation
+
+Real‑time shared sticky‑note sessions: teammates can highlight, comment, upvote notes, and see each others’ cursors.
+
+Domain‑Specific AI Plugins
+
+Offer “modes” or fine‑tuned adapters for legal, medical, engineering—so that contracts, clinical studies, or technical specs get far better answers.
+
+“Meeting Mode”
+
+Connect to Zoom/MS Teams, live‑capture slides, transcript, and auto‑summarize discussion as sticky notes, action items, and deadlines.
+
+Export & Integrations
+
+One‑click export of notes+chat into Markdown, PDF, or push directly into Notion/Confluence/Jira.
+
+Browser Extension
+
+Instantly “send to GeminiLens” from any webpage or web‑app—snap an image, grab selected text, or free‑type a question.
