@@ -1,0 +1,8 @@
+services:
+  - type: web
+    name: geminilens
+    env: docker
+    plan: free
+    region: oregon
+    branch: main
+    repo: https://github.com/Sjsuniti/GeminiLens
